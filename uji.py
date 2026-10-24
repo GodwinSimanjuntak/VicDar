@@ -1,11 +1,12 @@
-# Uji otomatis VicDar di QEMU: boot CD, lalu USB virtual (vicdar-simpan, persistence BIOS + UEFI).
+# Uji otomatis VicDar di QEMU: boot CD (toolchain + desktop), lalu USB virtual (vicdar-simpan, persistence BIOS + UEFI).
 # Jalankan sebagai root di Debian: apt install qemu-system-x86 python3-pexpect ovmf
-# sudo python3 uji.py out/vicdar-0.2-amd64.iso [cd|usb]
-import sys, os, re, shutil, subprocess, pexpect
+# sudo python3 uji.py out/vicdar-0.3-amd64.iso [cd|usb]   -> screenshot desktop: /var/tmp/vicdar-desktop.png
+import sys, os, re, socket, shutil, subprocess, time, pexpect
 iso = sys.argv[1]
 which = sys.argv[2] if len(sys.argv) > 2 else "all"
-BASE = ["qemu-system-x86_64", "-enable-kvm", "-m", "2048", "-smp", "2", "-nographic",
-        "-nic", "user,model=virtio-net-pci"]
+MON = "/var/tmp/vicdar-mon.sock"
+BASE = ["qemu-system-x86_64", "-enable-kvm", "-m", "3072", "-smp", "2", "-nographic",
+        "-nic", "user,model=virtio-net-pci", "-monitor", f"unix:{MON},server,nowait"]
 USB = ["-drive", "file=/var/tmp/t-usb.img,format=raw,if=none,id=usb", "-device", "qemu-xhci",
        "-device", "usb-storage,drive=usb"]
 UEFI = ["-bios", "/usr/share/ovmf/OVMF.fd"]
@@ -34,9 +35,31 @@ def check(cond, what):
 def off(p):
     p.sendline("echo dev | sudo -S -p '' poweroff"); p.expect(pexpect.EOF, timeout=90)
 
+def screenshot(path):
+    # screendump lewat monitor QEMU: layar VGA tetap dirender walau -nographic
+    if os.path.exists(path): os.remove(path)
+    s = socket.socket(socket.AF_UNIX); s.connect(MON)
+    s.sendall(f"screendump {path} -f png\n".encode())
+    for _ in range(20):
+        if os.path.exists(path) and os.path.getsize(path) > 0: break
+        time.sleep(0.5)
+    s.close()
+    return os.path.exists(path) and os.path.getsize(path) > 0
+
 if which in ("all", "cd"):
     p = boot(["-cdrom", iso], "CD BIOS")
-    o = run(p, "grep PRETTY /etc/os-release"); check("VicDar Linux 0.2" in o, "os-release")
+    o = run(p, "grep PRETTY /etc/os-release"); check("VicDar Linux" in o, "os-release")
+    # komponen desktop menyala bertahap, tunggu sampai semuanya ada (maks 120 dtk)
+    o = run(p, "D='Xorg xfce4-session xfce4-panel xfdesktop nm-applet pipewire'; "
+               "for i in $(seq 120); do n=0; for x in $D; do pgrep -x $x >/dev/null && n=$((n+1)); done; [ $n -eq 6 ] && break; sleep 1; done; "
+               "systemctl is-active lightdm; for x in $D; do pgrep -x $x >/dev/null && echo JALAN:$x || echo MATI:$x; done", timeout=180)
+    check("MATI" not in o and o.startswith("active"), "desktop XFCE jalan (lightdm, Xorg, panel, nm-applet, pipewire)")
+    o = run(p, "for s in $(loginctl list-sessions --no-legend | awk '{print $1}'); do loginctl show-session $s -p Name -p Type -p Seat --value | paste -sd' '; done")
+    check(any({"dev", "x11", "seat0"} <= set(l.split()) for l in o.splitlines()), "sesi grafis dev di seat0 (login otomatis)")
+    o = run(p, "codium --version 2>/dev/null | head -1; firefox-esr --version 2>/dev/null")
+    check("Firefox" in o and re.search(r"^\d+\.\d+", o, re.M) is not None, "VSCodium + Firefox terpasang")
+    run(p, "sleep 5")
+    check(screenshot("/var/tmp/vicdar-desktop.png"), "screenshot desktop tersimpan")
     o = run(p, "for c in gcc python3 node go rustc cargo podman git cmake gdb; do command -v $c >/dev/null && echo ADA:$c || echo HILANG:$c; done")
     check("HILANG" not in o, "semua toolchain ada")
     run(p, "gcc --version | head -1; python3 --version; node --version; go version; rustc --version; podman --version")

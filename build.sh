@@ -1,7 +1,7 @@
 #!/bin/bash
 set -euo pipefail
 
-NAME="VicDar"; ID="vicdar"; VERSION="0.2"; SUITE="trixie"
+NAME="VicDar"; ID="vicdar"; VERSION="0.3"; SUITE="trixie"
 MIRROR="http://deb.debian.org/debian"
 WORK="/var/tmp/vicdar"           # WAJIB di filesystem Linux, bukan /mnt/c
 ROOT="$(cd "$(dirname "$0")" && pwd)"
@@ -17,6 +17,12 @@ PAKET_FIRMWARE=(firmware-linux-free firmware-misc-nonfree firmware-amd-graphics
   firmware-brcm80211 firmware-mediatek firmware-sof-signed amd64-microcode intel-microcode)
 PAKET_DEV=(git build-essential gdb cmake pkg-config python3 python3-pip python3-venv
   nodejs npm golang rustc cargo podman uidmap passt fuse-overlayfs sqlite3)
+PAKET_DESKTOP=(xserver-xorg-core xserver-xorg-input-libinput xserver-xorg-video-all
+  lightdm lightdm-gtk-greeter xfce4 xfce4-terminal xfce4-notifyd xfce4-power-manager
+  xfce4-pulseaudio-plugin xfce4-whiskermenu-plugin mate-polkit network-manager-gnome
+  pipewire-audio pavucontrol libpam-systemd dbus-user-session dbus-x11 polkitd gvfs udisks2
+  firefox-esr fonts-dejavu fonts-liberation2 elementary-xfce-icon-theme greybird-gtk-theme
+  xdg-user-dirs xdg-utils)
 
 # Memastikan hak akses root dan memasang alat host yang belum tersedia.
 tahap_0_cek() {
@@ -72,7 +78,7 @@ di_chroot() {
     ' bash "$cmd"
 }
 
-# Menyiapkan repositori deb822 dan memasang paket sistem, firmware, perkakas developer, serta akun dev.
+# Menyiapkan repositori deb822 dan memasang paket sistem, firmware, perkakas dev, desktop XFCE, VSCodium, serta akun dev.
 tahap_3_paket() {
     echo "== Tahap 3: Konfigurasi repositori dan pemasangan paket di chroot"
 
@@ -94,12 +100,20 @@ EOF
 
     di_chroot "
         apt-get update
-        apt-get install -y --no-install-recommends ${PAKET_SISTEM[*]} ${PAKET_FIRMWARE[*]} ${PAKET_DEV[*]}
+        apt-get install -y --no-install-recommends ${PAKET_SISTEM[*]} ${PAKET_FIRMWARE[*]} ${PAKET_DEV[*]} ${PAKET_DESKTOP[*]}
+        curl -fsSL https://gitlab.com/paulcarroty/vscodium-deb-rpm-repo/raw/master/pub.gpg -o /usr/share/keyrings/vscodium-archive-keyring.asc
+        printf 'Types: deb\nURIs: https://download.vscodium.com/debs\nSuites: vscodium\nComponents: main\nArchitectures: amd64\nSigned-By: /usr/share/keyrings/vscodium-archive-keyring.asc\n' > /etc/apt/sources.list.d/vscodium.sources
+        apt-get update
+        apt-get install -y --no-install-recommends codium
         useradd -m -s /bin/bash -G sudo dev
         echo dev:dev | chpasswd
         passwd -l root
         usermod --add-subuids 100000-165535 --add-subgids 100000-165535 dev
         systemctl enable NetworkManager
+        mkdir -p /etc/xdg/xfce4/xfconf/xfce-perchannel-xml
+        cp /etc/xdg/xfce4/panel/default.xml /etc/xdg/xfce4/xfconf/xfce-perchannel-xml/xfce4-panel.xml
+        systemctl enable lightdm
+        systemctl set-default graphical.target
         apt-get clean
         rm -rf /var/lib/apt/lists/*
     "
@@ -132,8 +146,9 @@ EOF
 
     cat <<EOF > "$WORK/rootfs/etc/motd"
 Selamat datang di $NAME Linux $VERSION.
+  Desktop   : XFCE, Firefox ESR, VSCodium (perintah: codium)
   Toolchain : git gcc gdb cmake python3 node go rust podman
-  Wi-Fi     : sudo nmtui
+  Wi-Fi     : ikon jaringan di panel, atau sudo nmtui
   Simpan file ke USB (sekali saja): sudo vicdar-simpan
 EOF
 
