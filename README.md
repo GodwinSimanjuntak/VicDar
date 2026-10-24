@@ -14,8 +14,8 @@ Distro live USB untuk developer berbasis Debian 13 (trixie), dirakit tangan tanp
 Butuh Debian 13 (bisa di WSL2 pada Windows), akses root, sekitar 10 GB ruang kosong, dan internet.
 
 ```bash
-git clone https://github.com/GodwinSimanjuntak/vicdar-linux.git
-cd vicdar-linux
+git clone https://github.com/GodwinSimanjuntak/VicDar.git
+cd VicDar
 sudo bash build.sh      # hasil: out/vicdar-0.2-amd64.iso
 sudo bash run.sh        # coba sebagai CD live di QEMU
 sudo bash run.sh usb    # coba USB virtual + persistence
