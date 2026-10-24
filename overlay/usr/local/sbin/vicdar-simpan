@@ -1,0 +1,33 @@
+#!/bin/bash
+# Membuat partisi "persistence" di sisa ruang USB tempat VicDar berjalan, supaya file dan paket tersimpan.
+set -euo pipefail
+[ "$(id -u)" -eq 0 ] || { echo "Jalankan dengan: sudo vicdar-simpan" >&2; exit 1; }
+src=$(findmnt -no SOURCE /run/live/medium) || { echo "VicDar tidak sedang berjalan dari media live." >&2; exit 1; }
+parent=$(lsblk -no PKNAME "$src" | head -n1)
+if [ -n "$parent" ]; then disk="/dev/$parent"; else disk="$src"; fi
+case "$disk" in /dev/sr*) echo "VicDar berjalan dari CD/DVD (hanya-baca). Tulis ISO ke USB dulu." >&2; exit 1;; esac
+if ada=$(blkid -L persistence); then echo "Penyimpanan sudah ada di $ada."; exit 0; fi
+lsblk -o NAME,SIZE,TYPE,MODEL "$disk"
+echo
+echo "Sisa ruang kosong di $disk akan dijadikan partisi penyimpanan (ext4, label persistence)."
+echo "Isi VicDar tidak diubah."
+read -rp "Ketik YA untuk lanjut: " jawab
+[ "$jawab" = YA ] || { echo "Dibatalkan."; exit 1; }
+# GPT cadangan dari ISO ada di ujung image, bukan ujung USB: pindahkan dulu agar sisa ruang terlihat
+sfdisk --relocate gpt-bak-std "$disk"
+# --no-reread: disk sedang dipakai, kernel diberi tahu lewat partx
+echo ',,L' | sfdisk --append --no-reread --no-tell-kernel "$disk"
+n=$(sfdisk -d "$disk" | grep -c '^/dev/')
+partx --add --nr "$n" "$disk"
+udevadm settle
+part=$(lsblk -lnpo NAME,PARTN "$disk" | awk -v n="$n" '$2==n {print $1}')
+[ -b "$part" ] || { echo "Partisi baru tidak ditemukan." >&2; exit 1; }
+mkfs.ext4 -q -F -L persistence "$part"
+m=$(mktemp -d)
+mount "$part" "$m"
+echo "/ union" > "$m/persistence.conf"
+umount "$m"
+rmdir "$m"
+echo "Selesai. Partisi penyimpanan: $part"
+echo "Reboot sekarang (sudo reboot) dan pilih menu pertama."
+echo "Mulai boot berikutnya file dan paket tersimpan. Yang dibuat sebelum reboot tidak ikut tersimpan."
