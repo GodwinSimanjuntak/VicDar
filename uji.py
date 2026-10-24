@@ -56,10 +56,19 @@ if which in ("all", "cd"):
     check("MATI" not in o and o.startswith("active"), "desktop XFCE jalan (lightdm, Xorg, panel, nm-applet, pipewire)")
     o = run(p, "for s in $(loginctl list-sessions --no-legend | awk '{print $1}'); do loginctl show-session $s -p Name -p Type -p Seat --value | paste -sd' '; done")
     check(any({"dev", "x11", "seat0"} <= set(l.split()) for l in o.splitlines()), "sesi grafis dev di seat0 (login otomatis)")
+    o = run(p, "pgrep -a nm-applet; xfconf-query -c xfce4-panel -p /plugins/plugin-10/items")
+    check("--indicator" in o and "vicdar-session.desktop" in o, "rel: ikon jaringan mode indikator + tombol sesi")
     o = run(p, "codium --version 2>/dev/null | head -1; firefox-esr --version 2>/dev/null")
     check("Firefox" in o and re.search(r"^\d+\.\d+", o, re.M) is not None, "VSCodium + Firefox terpasang")
     run(p, "sleep 5")
     check(screenshot("/var/tmp/vicdar-desktop.png"), "screenshot desktop tersimpan")
+    # desktop yang sedang dipakai: terminal + VSCodium, lalu menu aplikasi terbuka
+    run(p, "export DISPLAY=:0 XAUTHORITY=$HOME/.Xauthority; "
+           "(xfce4-terminal --geometry=92x26+90+70 -x bash -c 'go version; podman --version; exec bash' >/dev/null 2>&1 &); "
+           "(codium --new-window >/dev/null 2>&1 &); sleep 15", timeout=60)
+    check(screenshot("/var/tmp/vicdar-apps.png"), "screenshot aplikasi tersimpan")
+    run(p, "xfce4-popup-whiskermenu; sleep 3")
+    check(screenshot("/var/tmp/vicdar-menu.png"), "screenshot menu tersimpan")
     o = run(p, "for c in gcc python3 node go rustc cargo podman git cmake gdb; do command -v $c >/dev/null && echo ADA:$c || echo HILANG:$c; done")
     check("HILANG" not in o, "semua toolchain ada")
     run(p, "gcc --version | head -1; python3 --version; node --version; go version; rustc --version; podman --version")

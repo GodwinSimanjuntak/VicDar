@@ -1,0 +1,251 @@
+/* VicDar GTK3 theme: the expedition kit.
+   Matte graphite, bone text, 1px rules, no shadows or gradients.
+   Safety orange is reserved for whatever is live: selection, focus, the current workspace,
+   the focused app, the main action. Built on Adwaita dark for complete widget coverage. */
+
+@import url("resource:///org/gtk/libgtk/theme/Adwaita/gtk-contained-dark.css");
+
+@define-color rail #1C1F21;
+@define-color ground #26292C;
+@define-color well #1E2123;
+@define-color raised #2F3438;
+@define-color hover #383E42;
+@define-color rule #3A4045;
+@define-color bone #E9E6DF;
+@define-color slate #9AA1A7;
+@define-color muted #6B737A;
+@define-color live #FF6B1A;
+@define-color live_hover #FF8240;
+@define-color danger #E5534B;
+@define-color ok #8CC265;
+
+/* Named colours other toolkits and apps read */
+@define-color theme_bg_color @ground;
+@define-color theme_fg_color @bone;
+@define-color theme_base_color @well;
+@define-color theme_text_color @bone;
+@define-color theme_selected_bg_color @live;
+@define-color theme_selected_fg_color @rail;
+@define-color insensitive_bg_color @ground;
+@define-color insensitive_fg_color @muted;
+@define-color borders @rule;
+@define-color unfocused_borders @rule;
+@define-color warning_color #E5B567;
+@define-color error_color @danger;
+@define-color success_color @ok;
+
+* {
+  -gtk-outline-radius: 2px;
+  outline-color: alpha(@live, 0.9);
+  outline-width: 1px;
+  outline-offset: -2px;
+}
+
+window, .background, dialog {
+  background-color: @ground;
+  color: @bone;
+}
+
+label.dim-label, .dim-label { color: @slate; opacity: 1; }
+*:disabled, label:disabled { color: @muted; }
+
+/* Selection: the live colour */
+selection, *:selected, .view:selected, treeview.view:selected, iconview:selected,
+flowbox flowboxchild:selected, entry selection, textview text selection {
+  background-color: @live;
+  color: @rail;
+}
+
+/* Views and text wells */
+.view, treeview.view, iconview, textview text, list, .sidebar, placessidebar list {
+  background-color: @well;
+  color: @bone;
+}
+treeview.view:hover, list row:hover { background-color: @raised; }
+treeview.view header button {
+  background-image: none; background-color: @ground; color: @slate;
+  border: none; border-bottom: 1px solid @rule; box-shadow: none; border-radius: 0;
+}
+list row:selected, .sidebar row:selected, placessidebar row:selected {
+  background-color: @live; color: @rail;
+}
+placessidebar row:selected label, placessidebar row:selected image { color: @rail; }
+
+/* Buttons */
+button {
+  background-image: none;
+  background-color: @raised;
+  color: @bone;
+  border: 1px solid @rule;
+  border-radius: 2px;
+  box-shadow: none;
+  text-shadow: none;
+  -gtk-icon-shadow: none;
+}
+button:hover { background-color: @hover; }
+button:active, button:checked { background-color: @rail; border-color: @rule; }
+button:disabled { background-color: @ground; color: @muted; border-color: @rule; }
+button.flat, button.flat:disabled { background-color: transparent; border-color: transparent; }
+button.flat:hover { background-color: @raised; border-color: @rule; }
+button.suggested-action, button.default:focus {
+  background-color: @live; border-color: @live; color: @rail;
+}
+button.suggested-action:hover { background-color: @live_hover; border-color: @live_hover; }
+button.suggested-action label, button.suggested-action image { color: @rail; }
+button.destructive-action { background-color: @danger; border-color: @danger; color: @rail; }
+button.destructive-action label { color: @rail; }
+
+/* Entries */
+entry, spinbutton:not(.vertical), spinbutton.vertical > entry {
+  background-image: none;
+  background-color: @well;
+  color: @bone;
+  border: 1px solid @rule;
+  border-radius: 2px;
+  box-shadow: none;
+  caret-color: @live;
+}
+entry:focus, spinbutton:focus-within {
+  border-color: @live;
+  box-shadow: inset 0 0 0 1px @live;
+}
+entry:disabled { background-color: @ground; color: @muted; }
+entry placeholder, entry .placeholder { color: @slate; }
+entry progress { border-bottom: 2px solid @live; background: none; }
+
+/* Check, radio, switch, sliders, progress */
+check, radio {
+  background-image: none; background-color: @well; border: 1px solid @slate; box-shadow: none;
+}
+check { border-radius: 2px; }
+check:checked, radio:checked, check:indeterminate {
+  background-color: @live; border-color: @live; color: @rail; -gtk-icon-shadow: none;
+}
+switch { background-image: none; background-color: @well; border: 1px solid @rule; border-radius: 2px; box-shadow: none; }
+switch:checked { background-color: @live; border-color: @live; color: @rail; }
+switch slider { background-image: none; background-color: @bone; border: none; border-radius: 1px; box-shadow: none; }
+scale trough, progressbar trough, levelbar trough {
+  background-image: none; background-color: @well; border: 1px solid @rule; border-radius: 1px; box-shadow: none;
+}
+scale highlight, progressbar progress, levelbar block.filled {
+  background-image: none; background-color: @live; border: none; border-radius: 1px; box-shadow: none;
+}
+scale slider {
+  background-image: none; background-color: @bone; border: 1px solid @rule; border-radius: 2px; box-shadow: none;
+}
+
+/* Scrollbars: thin graphite bars, orange while dragged */
+scrollbar { background-color: transparent; border: none; }
+scrollbar slider {
+  background-color: @rule; border: none; border-radius: 0; min-width: 6px; min-height: 6px; margin: 2px;
+}
+scrollbar slider:hover { background-color: @muted; }
+scrollbar slider:active { background-color: @live; }
+
+/* Header bars, toolbars, menus, popovers, tooltips */
+headerbar, .titlebar:not(headerbar), toolbar, .toolbar, menubar, .menubar {
+  background-image: none;
+  background-color: @rail;
+  color: @bone;
+  border: none;
+  border-bottom: 1px solid @rule;
+  box-shadow: none;
+}
+headerbar:backdrop { background-color: @ground; }
+menu, .menu, .context-menu, popover, popover.background {
+  background-color: @rail;
+  color: @bone;
+  border: 1px solid @rule;
+  border-radius: 2px;
+  box-shadow: none;
+  padding: 4px 0;
+}
+menu menuitem, .menu menuitem { padding: 5px 12px; text-shadow: none; }
+menu menuitem:hover, .menu menuitem:hover, menubar > menuitem:hover {
+  background-color: @live; color: @rail;
+}
+menu menuitem:hover label, menu menuitem:hover accelerator { color: @rail; }
+menu menuitem accelerator { color: @slate; }
+menu separator, .menu separator { background-color: @rule; margin: 4px 0; min-height: 1px; }
+tooltip, tooltip.background {
+  background-color: @rail; color: @bone; border: 1px solid @rule; border-radius: 2px; box-shadow: none;
+}
+tooltip * { color: @bone; }
+
+/* Tabs: the open tab wears the tag */
+notebook > header { background-color: @rail; border-color: @rule; box-shadow: none; }
+notebook > header > tabs > tab { color: @slate; border: none; box-shadow: none; padding: 5px 14px; }
+notebook > header > tabs > tab:hover { color: @bone; background-color: @raised; box-shadow: none; }
+notebook > header > tabs > tab:checked { color: @bone; background-color: @ground; box-shadow: inset 0 2px @live; }
+notebook > stack:not(:only-child) { background-color: @ground; }
+
+separator { background-color: @rule; min-width: 1px; min-height: 1px; }
+frame > border, .frame { border: 1px solid @rule; box-shadow: none; }
+infobar.warning > revealer > box { background-color: #4A3F28; color: @bone; }
+infobar.error > revealer > box { background-color: #4D2B2A; color: @bone; }
+
+/* ---------------------------------------------------------------- panel rail */
+
+/* The graphite-to-slate step already separates rail from field: no edge rule */
+.xfce4-panel.background {
+  background-color: @rail;
+  background-image: none;
+  border: none;
+  box-shadow: none;
+  color: @bone;
+}
+.xfce4-panel button {
+  background-image: none;
+  background-color: transparent;
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
+  padding: 6px 0;
+  color: @bone;
+}
+.xfce4-panel button:hover { background-color: @raised; }
+.xfce4-panel button:checked, .xfce4-panel button:active { background-color: @raised; }
+.xfce4-panel label { font-feature-settings: "tnum"; }
+
+/* Workspaces as gear tags: the current one is painted orange */
+#pager-2 button {
+  margin: 3px 10px;
+  padding: 3px 0;
+  border: 1px solid @rule;
+  border-radius: 2px;
+  font-weight: 600;
+  color: @slate;
+}
+#pager-2 button:hover { color: @bone; border-color: @muted; }
+#pager-2 button:checked { background-color: @live; border-color: @live; color: @rail; }
+#pager-2 button:checked label { color: @rail; }
+
+/* Pinned and running apps (docklike draws the orange tag on the focused one itself) */
+#docklike-4 button { padding: 8px 0; }
+
+/* Clock: time over date, tabular figures so the rail never jitters */
+#clock-9 label { font-feature-settings: "tnum"; color: @bone; }
+#clock-9 button { padding: 8px 0; }
+
+/* Whisker menu: one frame, everything on the rail ground, aligned to the search entry */
+#whiskermenu-window { background-color: @rail; }
+/* GTK3 skips borders on plain toplevels; the menu's edge rule lives on its first child */
+#whiskermenu-window > * { border: 1px solid @rule; }
+#whiskermenu-window entry { margin: 4px 0; }
+#whiskermenu-window scrolledwindow, #whiskermenu-window scrolledwindow.frame,
+#whiskermenu-window frame > border {
+  border: none; box-shadow: none; background-color: @rail;
+}
+#whiskermenu-window treeview.view, #whiskermenu-window iconview { background-color: @rail; }
+#whiskermenu-window button {
+  background-image: none; border-color: transparent; background-color: transparent; box-shadow: none;
+}
+#whiskermenu-window button:hover { background-color: @raised; }
+#whiskermenu-window button:checked, #whiskermenu-window button:checked:hover {
+  background-image: none; background-color: @raised; box-shadow: inset 3px 0 @live;
+}
+#whiskermenu-window button:checked > * { background-color: transparent; }
+
+/* Thunar path bar and status */
+.thunar .path-bar button:checked { box-shadow: inset 0 -2px @live; }
+statusbar { color: @slate; }

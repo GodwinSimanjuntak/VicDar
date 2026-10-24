@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=Session
+Comment=Log out, restart or shut down
+Exec=xfce4-session-logout
+Icon=/usr/share/icons/hicolor/scalable/apps/vicdar-session.svg
+Terminal=false
+NoDisplay=true

@@ -4,7 +4,7 @@
 environment (compilers, runtimes, containers, an editor and a browser), with your work saved
 back to the same USB stick.
 
-Built on Debian 13 "trixie" · version 0.3 · early stage · GPL-3.0
+Built on Debian 13 "trixie" · version 0.4 · early stage · GPL-3.0
 
 ## What it's for
 
@@ -24,8 +24,11 @@ Built on Debian 13 "trixie" · version 0.3 · early stage · GPL-3.0
 - **Your work survives reboots, set up with one command.** Run `sudo vicdar-simpan` once inside
   the live system. It turns the free space on the USB stick into storage for your files,
   settings and installed packages.
-- **Light desktop.** XFCE with Firefox ESR and VSCodium, login is automatic, and Wi-Fi is one
-  click away in the panel.
+- **A desktop of its own, built for focus.** A graphite rail on the left edge holds the app
+  menu, workspaces as numbered tags, your pinned apps, the tray and the clock. Safety orange
+  marks only what is live: the current workspace, the focused window and app, your selection.
+  A contour-map wallpaper drawn by a script, Overpass type, and no blur, transparency or
+  shadows, so it stays quick on old laptops. XFCE underneath, with Firefox ESR and VSCodium.
 - **Made for real laptops.** Wi-Fi, GPU and audio firmware plus CPU microcode are included, and
   the same image boots on BIOS and UEFI machines.
 - **Rootless containers.** `podman run` works for the default user out of the box.
@@ -48,7 +51,7 @@ Built on Debian 13 "trixie" · version 0.3 · early stage · GPL-3.0
 ```bash
 git clone https://github.com/GodwinSimanjuntak/VicDar.git
 cd VicDar
-sudo bash build.sh    # -> out/vicdar-0.3-amd64.iso
+sudo bash build.sh    # -> out/vicdar-0.4-amd64.iso
 sudo bash run.sh      # try it in QEMU
 ```
 

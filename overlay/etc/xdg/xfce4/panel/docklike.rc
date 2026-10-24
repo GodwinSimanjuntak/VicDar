@@ -1,0 +1,16 @@
+[user]
+pinned=xfce4-terminal;com.visualstudio.codeoss;firefox-esr;thunar;
+indicatorOrientation=4
+indicatorStyle=0
+inactiveIndicatorStyle=0
+indicatorColorFromTheme=false
+indicatorColor=rgb(255,107,26)
+inactiveColor=rgb(107,115,122)
+showPreviews=false
+showWindowCount=false
+forceIconSize=true
+iconSize=24
+onlyDisplayVisible=false
+onlyDisplayScreen=false
+keyComboActive=false
+keyAloneActive=false

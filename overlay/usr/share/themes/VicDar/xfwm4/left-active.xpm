@@ -1,0 +1,8 @@
+/* XPM */
+/* VicDar xfwm4 theme, drawn by tools/gen-theme-assets.py */
+static char * left_active_xpm[] = {
+"2 1 2 1",
+"a c #1C1F21",
+"b c #3A4045",
+"ba"
+};

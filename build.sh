@@ -1,7 +1,7 @@
 #!/bin/bash
 set -euo pipefail
 
-NAME="VicDar"; ID="vicdar"; VERSION="0.3"; SUITE="trixie"
+NAME="VicDar"; ID="vicdar"; VERSION="0.4"; SUITE="trixie"
 MIRROR="http://deb.debian.org/debian"
 WORK="/var/tmp/vicdar"           # WAJIB di filesystem Linux, bukan /mnt/c
 ROOT="$(cd "$(dirname "$0")" && pwd)"
@@ -22,7 +22,8 @@ PAKET_DESKTOP=(xserver-xorg-core xserver-xorg-input-libinput xserver-xorg-video-
   xfce4-pulseaudio-plugin xfce4-whiskermenu-plugin mate-polkit network-manager-gnome
   pipewire-audio pavucontrol libpam-systemd dbus-user-session dbus-x11 polkitd gvfs udisks2
   firefox-esr fonts-dejavu fonts-liberation2 elementary-xfce-icon-theme greybird-gtk-theme
-  xdg-user-dirs xdg-utils)
+  xdg-user-dirs xdg-utils librsvg2-common
+  xfce4-docklike-plugin xfce4-power-manager-plugins)
 
 # Memastikan hak akses root dan memasang alat host yang belum tersedia.
 tahap_0_cek() {
@@ -110,8 +111,8 @@ EOF
         passwd -l root
         usermod --add-subuids 100000-165535 --add-subgids 100000-165535 dev
         systemctl enable NetworkManager
-        mkdir -p /etc/xdg/xfce4/xfconf/xfce-perchannel-xml
-        cp /etc/xdg/xfce4/panel/default.xml /etc/xdg/xfce4/xfconf/xfce-perchannel-xml/xfce4-panel.xml
+        dpkg-divert --local --rename --divert /usr/share/backgrounds/xfce/xfce-x.svg.xfce --add /usr/share/backgrounds/xfce/xfce-x.svg
+        ln -s ../vicdar/vicdar-contours.svg /usr/share/backgrounds/xfce/xfce-x.svg
         systemctl enable lightdm
         systemctl set-default graphical.target
         apt-get clean
@@ -148,7 +149,7 @@ EOF
 Selamat datang di $NAME Linux $VERSION.
   Desktop   : XFCE, Firefox ESR, VSCodium (perintah: codium)
   Toolchain : git gcc gdb cmake python3 node go rust podman
-  Wi-Fi     : ikon jaringan di panel, atau sudo nmtui
+  Wi-Fi     : ikon jaringan di rel kiri, atau sudo nmtui
   Simpan file ke USB (sekali saja): sudo vicdar-simpan
 EOF
 
@@ -159,7 +160,9 @@ EOF
     : > "$WORK/rootfs/etc/machine-id"
 
     cp -r "$ROOT/overlay/." "$WORK/rootfs/"
-    chmod 755 "$WORK/rootfs/usr/local/sbin/vicdar-simpan"
+    chmod 755 "$WORK/rootfs/usr/local/sbin/vicdar-simpan" "$WORK/rootfs/usr/local/bin/vicdar-nm-applet"
+    # akun dev dibuat di tahap 3, sebelum overlay; bawa ulang isi /etc/skel (pengaturan VSCodium) ke rumahnya
+    di_chroot "cp -rT /etc/skel /home/dev && chown -R dev:dev /home/dev && fc-cache -f"
 }
 
 # Menyalin berkas kernel dan initramfs serta memadatkan rootfs menjadi citra squashfs.

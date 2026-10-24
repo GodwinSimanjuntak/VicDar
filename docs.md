@@ -29,7 +29,7 @@ cd VicDar
 sudo bash build.sh
 ```
 
-The result is `out/vicdar-0.3-amd64.iso`. The working directory is `/var/tmp/vicdar`. It must
+The result is `out/vicdar-0.4-amd64.iso`. The working directory is `/var/tmp/vicdar`. It must
 be on a Linux filesystem, so on WSL2 keep it there and not under `/mnt/c`.
 
 ## Try it in QEMU
@@ -49,7 +49,7 @@ sudo bash run.sh usb    # boot a virtual 4 GB USB stick, to try persistence
 The ISO is a hybrid image: write it to the whole stick, not to a partition.
 
 - **Windows:** Rufus in **DD image** mode, or balenaEtcher.
-- **Linux:** `sudo dd if=out/vicdar-0.3-amd64.iso of=/dev/sdX bs=4M status=progress && sync`
+- **Linux:** `sudo dd if=out/vicdar-0.4-amd64.iso of=/dev/sdX bs=4M status=progress && sync`
   (replace `/dev/sdX` with the stick; everything on it is erased).
 
 Then boot from the stick. On most laptops that means a boot menu key (F12, F9, Esc) and
@@ -80,30 +80,54 @@ The boot menu has two entries:
 
 | Entry | Effect |
 |---|---|
-| `VicDar Linux 0.3` (default) | Uses the persistence partition if there is one |
-| `VicDar Linux 0.3 (sesi bersih, tanpa simpan)` | Clean session: nothing is read from or saved to the stick |
+| `VicDar Linux 0.4` (default) | Uses the persistence partition if there is one |
+| `VicDar Linux 0.4 (sesi bersih, tanpa simpan)` | Clean session: nothing is read from or saved to the stick |
 
 ## Default account
 
 - User `dev`, password `dev`, member of `sudo`. The root account is locked.
-- The desktop logs in automatically (LightDM). The text console on tty1 also logs in
-  automatically, which is a useful fallback if graphics fail.
+- The desktop logs in automatically (LightDM). After you log out, the login screen asks for
+  the password (`dev`). The text console on tty1 also logs in automatically, which is a useful
+  fallback if graphics fail.
 - Change the password with `passwd` once persistence is on.
 
 ## What's inside
 
 Everything comes from Debian 13 except VSCodium, which comes from the official VSCodium
-repository.
+repository, and the Overpass fonts, which ship in `overlay/` (see Look and feel).
 
 | Group | Packages |
 |---|---|
-| Desktop | XFCE, LightDM, Firefox ESR, VSCodium (`codium`), PipeWire audio, NetworkManager applet, power manager |
+| Desktop | XFCE, LightDM, Firefox ESR, VSCodium (`codium`), PipeWire audio, NetworkManager applet, power manager, docklike rail plugin, VicDar theme |
 | Development | gcc/g++ (`build-essential`), gdb, CMake, pkg-config, Python 3.13 (pip, venv), Node.js 20 + npm, Go 1.24, Rust 1.85 + Cargo, Podman (rootless), SQLite |
 | Command line | git, curl, wget, vim, nano, tmux, htop, jq, ripgrep, fd, tree, rsync, OpenSSH client |
 | Hardware | Wi-Fi firmware (Intel, Realtek, Atheros, Broadcom, MediaTek), AMD/Intel GPU firmware, SOF audio, CPU microcode |
 
 The toolchains are Debian's versions, which are stable but not the newest. For the latest
 releases, install `rustup`, `nvm` and similar tools on top (keep them with persistence).
+
+## Look and feel
+
+The desktop has one rule: matte graphite everywhere, and safety orange (`#FF6B1A`) only on
+what is live. Everything is flat: 1px rules, no shadows, gradients, blur or transparency.
+
+| Part | Where |
+|---|---|
+| GTK3 theme (windows, controls, menus, rail styling) | `overlay/usr/share/themes/VicDar/gtk-3.0/gtk.css` |
+| Window frames (orange tag on the focused window) | `overlay/usr/share/themes/VicDar/xfwm4/`, generated |
+| Notifications | `overlay/usr/share/themes/VicDar/xfce-notify-4.0/gtk.css` + `xfce4-notifyd.xml` |
+| Contour wallpaper (also the login screen) | `overlay/usr/share/backgrounds/vicdar/vicdar-contours.svg`, generated |
+| Rail layout, workspaces, clock | `overlay/etc/xdg/xfce4/xfconf/xfce-perchannel-xml/xfce4-panel.xml`, `overlay/etc/xdg/xfce4/panel/docklike.rc` |
+| Fonts: Overpass (interface), Overpass Mono (terminal, editor) | `overlay/usr/share/fonts/truetype/overpass/` (SIL OFL 1.1, sources in `SOURCE.md`) |
+| Terminal and VSCodium colours | `xfce4-terminal.xml`, `overlay/etc/skel/.config/VSCodium/User/settings.json` |
+
+The wallpaper and the window frames are drawn by `tools/gen-theme-assets.py` (Python standard
+library only). Change `SEED` there for a different terrain, or the colour constants for a
+different palette, then run it and rebuild:
+
+```bash
+python3 tools/gen-theme-assets.py
+```
 
 ## Customizing
 
@@ -139,18 +163,19 @@ command ends, even if it fails.
 
 ```bash
 sudo apt install qemu-system-x86 python3-pexpect ovmf
-sudo python3 uji.py out/vicdar-0.3-amd64.iso          # everything
-sudo python3 uji.py out/vicdar-0.3-amd64.iso cd       # live CD checks only
-sudo python3 uji.py out/vicdar-0.3-amd64.iso usb      # USB + persistence checks only
+sudo python3 uji.py out/vicdar-0.4-amd64.iso          # everything
+sudo python3 uji.py out/vicdar-0.4-amd64.iso cd       # live CD checks only
+sudo python3 uji.py out/vicdar-0.4-amd64.iso usb      # USB + persistence checks only
 ```
 
 `uji.py` drives QEMU over the serial console and checks:
 
 - **Live CD:** os-release, every toolchain, sudo, networking and DNS, no failed services, the
   XFCE desktop (LightDM, Xorg, panel, network applet, PipeWire) with an auto-login graphical
-  session, VSCodium and Firefox, a rootless `podman run`, firmware, and that `vicdar-simpan`
-  refuses to run from a CD. It also saves a screenshot of the desktop to
-  `/var/tmp/vicdar-desktop.png`.
+  session, the rail's network icon and session button, VSCodium and Firefox, a rootless
+  `podman run`, firmware, and that `vicdar-simpan` refuses to run from a CD. It also saves
+  screenshots of the empty desktop, the desktop with a terminal and VSCodium open, and the app
+  menu to `/var/tmp/vicdar-{desktop,apps,menu}.png`.
 - **Virtual USB:** `vicdar-simpan` creates the partition, files in `/home` and `/etc` survive
   a reboot, the partition is detected on a second run, and the stick still boots in UEFI mode
   with the saved files.
@@ -165,6 +190,7 @@ everything passes.
 | `build.sh` | Builds the ISO (stages 0 to 7) |
 | `run.sh` | Boots the ISO or a virtual USB stick in QEMU |
 | `uji.py` | Automated boot and persistence tests |
+| `tools/gen-theme-assets.py` | Draws the wallpaper and the window frames |
 | `overlay/` | Files copied verbatim into the root filesystem |
 | `overlay/usr/local/sbin/vicdar-simpan` | The persistence setup command |
 | `docs.md` | This document |
@@ -176,3 +202,7 @@ everything passes.
 - 64-bit x86 (amd64) only.
 - Some text inside the system (welcome message, `vicdar-simpan`, boot menu) is in Indonesian.
 - No graphical installer. VicDar is meant to run live from USB.
+- Desktop defaults reach a user through `/etc/skel` and `/etc/xdg`. A persistence partition
+  made with an older VicDar keeps that version's personal settings (for example terminal
+  spacing or rail layout) until you remove `~/.config/xfce4` and `~/.config/gtk-3.0` and log
+  in again.
